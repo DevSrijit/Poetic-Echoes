@@ -1,2 +1,6 @@
 .vercel
 node_modules
+bun.lockb
+.env.local
+.next
+.gitignore
