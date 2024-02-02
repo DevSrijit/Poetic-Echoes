@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useOrganization } from "@clerk/nextjs";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { usePathname, useRouter } from "next/navigation";
+import { useState } from "react";
 
 import {
   Form,
@@ -38,15 +39,27 @@ function PostThread({ userId }: Props) {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof ThreadValidation>) => {
-    await createThread({
-      text: values.thread,
-      author: userId,
-      communityId: organization ? organization.id : null,
-      path: pathname,
-    });
+  const [isSubmitting, setIsSubmitting] = useState(false); // BEGIN: Add state for isSubmitting
 
-    router.push("/");
+  const onSubmit = async (values: z.infer<typeof ThreadValidation>) => {
+    if (isSubmitting) return; // BEGIN: Prevent double submission
+
+    setIsSubmitting(true); // BEGIN: Set isSubmitting to true
+
+    try {
+      await createThread({
+        text: values.thread,
+        author: userId,
+        communityId: organization ? organization.id : null,
+        path: pathname,
+      });
+
+      router.push("/");
+    } catch (error) {
+      console.error("Error creating thread:", error);
+    } finally {
+      setIsSubmitting(false); // BEGIN: Set isSubmitting to false
+    }
   };
 
   return (
@@ -71,8 +84,8 @@ function PostThread({ userId }: Props) {
           )}
         />
 
-        <Button type='submit' className='bg-primary-500'>
-          Publish
+        <Button type='submit' className='bg-primary-500' disabled={isSubmitting}>
+          {isSubmitting ? "Publishing..." : "Publish"}
         </Button>
       </form>
     </Form>
